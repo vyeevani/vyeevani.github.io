@@ -1,8 +1,8 @@
 ---
 layout: post
 title:  "Increasing robotic manipulation teleop sample efficiency"
-date:   2024-03-30 10:54:30 -0700
-categories: RL
+date:   2024-03-30 9:00:00 -0700
+categories: Robotics
 usemathjax: true
 ---
 
