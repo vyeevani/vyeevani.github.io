@@ -1,7 +1,7 @@
 ---
 layout: post
 title:  "Hiding Action Prediction Inference Time in Robotics Applications"
-date:   2024-09-16 14:00:00 -0700
+date:   2024-09-16 8:00:00 -0700
 categories: Robotics
 usemathjax: true
 published: true
