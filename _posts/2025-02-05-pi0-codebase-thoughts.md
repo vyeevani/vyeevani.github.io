@@ -20,12 +20,11 @@ They use flax. Things to note about flax, it relies heavily on structs to define
 The pi0.py base model is at [openpi/models/pi0.py](https://github.com/Physical-Intelligence/openpi/blob/main/src/openpi/models/pi0.py). We'll start there and then dig into the [gemma.py](https://github.com/Physical-Intelligence/openpi/blob/main/src/openpi/models/gemma.py) that holds the actual computation part.
 
 These are the four main functions of the Pi0 model:
-| Function | Purpose |
-|----------|---------|
-| embed_prefix | Embeds input data (language + image + robot state) |
-| embed_suffix | Embeds input data (language + image + robot state) |
-| compute_loss | Computes model loss during training |
-| sample_actions | Samples actions from the trained model |
+
+- embed_prefix: Embeds input data (language + image + robot state)
+- embed_suffix: Embeds input data (language + image + robot state) 
+- compute_loss: Computes model loss during training
+- sample_actions: Samples actions from the trained model
 
 ## Embed Prefix
 Isn't much to note here other than the masking. We have bidirectional attention amongst image tokens + language tokens. I'm not clear on if it's a good idea to allow for bidirectional attention because that's a distribution shift between paligemma training. Afaik, that was trained only on AR tasks without any masked language modeling. I guess the pretraining on robot datasets, could correct for the shift. Weird.
