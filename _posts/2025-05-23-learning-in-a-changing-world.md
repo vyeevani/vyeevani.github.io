@@ -21,7 +21,7 @@ $$
 Differentiating—informally—with respect to changes in the data distribution gives:
 
 $$
-\frac{\partial G}{\partial D} \leq \frac{1}{\sqrt{2nI(D;\theta)}} H(\theta|D)
+\frac{\partial G}{\partial D} \leq \frac{1}{\sqrt{2nI(D;\theta)}} \frac{\partial H(\theta|D)}{\partial D}
 $$
 
 where $$H(\theta\mid D)$$ is the conditional entropy of parameters given the data. We desire this sensitivity to be negative, so that dataset shifts tighten the bound.
@@ -44,18 +44,18 @@ $$
 Differentiating in $$\mathcal{D}$$:
 
 $$
-\frac{d}{d\mathcal{D}} H(\theta|\mathcal{D}) = \tfrac{d}{2} \frac{1}{\sigma^2(\mathcal{A}(\mathcal{D}))} \frac{d\sigma^2(\mathcal{A}(\mathcal{D}))}{d\mathcal{A}} \frac{d\mathcal{A}(\mathcal{D})}{d\mathcal{D}}
+\frac{\partial}{\partial\mathcal{D}} H(\theta|\mathcal{D}) = \tfrac{d}{2} \frac{1}{\sigma^2(\mathcal{A}(\mathcal{D}))} \frac{\partial\sigma^2(\mathcal{A}(\mathcal{D}))}{\partial\mathcal{A}} \frac{\partial\mathcal{A}(\mathcal{D})}{\partial\mathcal{D}}
 $$
 
 From earlier, we want the product of derivatives must be negative because that means we are still generalizing in changing conditions:
 
 $$
-\frac{d\sigma^2(\mathcal{A}(\mathcal{D}))}{d\mathcal{A}} \frac{d\mathcal{A}(\mathcal{D})}{d\mathcal{D}} < 0
+\frac{\partial\sigma^2(\mathcal{A}(\mathcal{D}))}{\partial\mathcal{A}} \frac{\partial\mathcal{A}(\mathcal{D})}{\partial\mathcal{D}} < 0
 $$
 
 This means either:
-1. $$\tfrac{d\sigma^2}{d\mathcal{A}} < 0$$ and $$\tfrac{d\mathcal{A}}{d\mathcal{D}} > 0$$, or
-2. $$\tfrac{d\sigma^2}{d\mathcal{A}} > 0$$ and $$\tfrac{d\mathcal{A}}{d\mathcal{D}} < 0$$
+1. $$\tfrac{\partial\sigma^2}{\partial\mathcal{A}} < 0$$ and $$\tfrac{\partial\mathcal{A}}{\partial\mathcal{D}} > 0$$, or
+2. $$\tfrac{\partial\sigma^2}{\partial\mathcal{A}} > 0$$ and $$\tfrac{\partial\mathcal{A}}{\partial\mathcal{D}} < 0$$
 
 
 ## Case Studies
@@ -65,13 +65,13 @@ It's hard to take my word for this (especially since I hand wave all my math). B
 # Why naive stuff doesn't work
 The standard toolkit of deep learning optimization techniques, while effective for stationary distributions, can actively prevent adaptation when the data distribution shifts:
 
-- **Variance reduction** through techniques like gradient clipping and moving averages, which make $$\tfrac{d\sigma^2}{d\mathcal{A}}<0$$.
-- **Explicit regularization** (e.g. weight decay) that pulls parameters toward zero, making $$\tfrac{d\mathcal{A}}{d\mathcal{D}}<0$$.
+- **Variance reduction** through techniques like gradient clipping and moving averages, which make $$\tfrac{\partial\sigma^2}{\partial\mathcal{A}}<0$$.
+- **Explicit regularization** (e.g. weight decay) that pulls parameters toward zero, making $$\tfrac{\partial\mathcal{A}}{\partial\mathcal{D}}<0$$.
 
 When both effects are negative, their product in the entropy derivative becomes positive:
 
 $$
-\frac{d}{d\mathcal{D}} H(\theta|\mathcal{D}) \propto \underbrace{\frac{d\sigma^2(\mathcal{A}(\mathcal{D}))}{d\mathcal{A}}}_{<0} \underbrace{\frac{d\mathcal{A}(\mathcal{D})}{d\mathcal{D}}}_{<0} > 0
+\frac{\partial}{\partial\mathcal{D}} H(\theta|\mathcal{D}) \propto \underbrace{\frac{\partial\sigma^2(\mathcal{A}(\mathcal{D}))}{\partial\mathcal{A}}}_{<0} \underbrace{\frac{\partial\mathcal{A}(\mathcal{D})}{\partial\mathcal{D}}}_{<0} > 0
 $$
 
 This positive derivative means the generalization bound grows with distribution shifts, preventing effective adaptation.
@@ -83,10 +83,10 @@ $$
 L(\theta) = \mathbb{E}[\min (\Delta(\theta)\hat A, \mathrm{clip}(\Delta(\theta),1-\epsilon,1+\epsilon)\hat A)]
 $$
 
-where $$\Delta(\theta)$$ is the ratio of new to old model outputs (or probabilities) and $$\hat A$$ the advantage estimate. Such clipping permits strong updates in promising directions ($$\tfrac{d\mathcal{A}}{d\mathcal{D}}>0$$) without an explicit weight‐decay pull. Combined with variance‐reduction (e.g. gradient clipping, moving averages), it maintains $$\tfrac{d\sigma^2}{d\mathcal{A}}<0$$, ensuring that $$\partial G/\partial D$$ stays negative under shifts:
+where $$\Delta(\theta)$$ is the ratio of new to old model outputs (or probabilities) and $$\hat A$$ the advantage estimate. Such clipping permits strong updates in promising directions ($$\tfrac{\partial\mathcal{A}}{\partial\mathcal{D}}>0$$) without an explicit weight‐decay pull. Combined with variance‐reduction (e.g. gradient clipping, moving averages), it maintains $$\tfrac{\partial\sigma^2}{\partial\mathcal{A}}<0$$, ensuring that $$\partial G/\partial D$$ stays negative under shifts:
 
 $$
-\frac{d}{d\mathcal{D}} H(\theta|\mathcal{D}) \propto \underbrace{\frac{d\sigma^2(\mathcal{A}(\mathcal{D}))}{d\mathcal{A}}}_{<0} \underbrace{\frac{d\mathcal{A}(\mathcal{D})}{d\mathcal{D}}}_{>0} < 0
+\frac{\partial}{\partial\mathcal{D}} H(\theta|\mathcal{D}) \propto \underbrace{\frac{\partial\sigma^2(\mathcal{A}(\mathcal{D}))}{\partial\mathcal{A}}}_{<0} \underbrace{\frac{\partial\mathcal{A}(\mathcal{D})}{\partial\mathcal{D}}}_{>0} < 0
 $$
 
 Constraining parameter updates relative to the previous model state—rather than globally shrinking magnitudes—enables rapid adaptation to non-stationary data while generalizing.
