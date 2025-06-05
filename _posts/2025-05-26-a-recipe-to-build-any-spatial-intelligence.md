@@ -34,7 +34,7 @@ Once you have a problem you'd like to solve, the classical method to building an
 2. write an equation that goes from symmetry to your solution
 
 The data driven modern approach is similar but just swaps the identify symmetry + write equation bits with:
-1. collect dataset
+1. collect dataset show casing symmetry
 2. train conditional model
 
 My pitch here is to replace the collect dataset + train conditional model with
@@ -47,7 +47,6 @@ The simplest way to build a dataset that you could use to build dust3r would be
 1. figure out what general environments you'd like your intelligence model to work in: indoor, outdoor, dynamic, static, etc (just fyi dust3r does poorly in dynamic scenes, see [monst3r](https://monst3r-project.github.io))
 2. identify transforms across videos or within videos that reflect the spatial intelligence you'd like to extract. In this case, if you ask the model to generate samples of timed camera motion. For example: 60 seconds of video with the camera set back by 1m from an object doing a 360 degree rotation around the object. Now you know the transforms between frames. So you have tuples: (pair of images, transform between images)
 3. build conditional model. video -> alignment using generated dataset. The video will likely not be super accurate, so it's best to learn a distribution of possible alignments so that we can reduce the entropy later through refinement
-
 
 # Vibe Training
 You might say, this still doesn't really feel like vibe training. You are still doing a lot of work to algorithmically produce prompts to the video model. The key part of vibe driven development is that all it takes is one prompt + prompt based edits. I think this is still very much possible. Just ask the language model to produce the prompts - I've tried this with examples, it works pretty damn well.
@@ -71,8 +70,29 @@ Take [motion prompts](https://motion-prompting.github.io/#causal) as an example 
 
 # What do we need in video models to get this to work?
 
-Actually nothing. If you allow the video generation model to improve through the converse conditioning, then with enough user feedback, we'd be able to make this work automatically. We already have some datasets and some techniques that we can use to help bootstrap this process: (ego 4d, something something, all the project aria stuff, dust3r, mast3r slam, monst3r, video qa llms, open x embodiment, segment anything v2, video depth anything, nvidia omniverse). With these, we could effectively build up all the priors needed to make this work. 
+So far in the discussion, we'd need multi-turn video editing as a basic thing to help bootstrap. We already have some datasets and some techniques that we can use to help bootstrap: (ego 4d, something something, all the project aria stuff, dust3r, mast3r slam, monst3r, video qa llms, open x embodiment, segment anything v2, video depth anything, nvidia omniverse).
+
+However, it's not clear this is really possible to do well. For example, detailed motion text prompts are hard to get: [motion prompts](https://motion-prompting.github.io/#causal). What if, we can avoid having to build a video model that has this. Can we actually just sidestep text as a requirement, and instead let text <-> video be just another spatial intelligence task, rather than a precondition.
+
+This is where I kinda go completely off the rails. Suppose a few things:
+1.  video model has a smooth latent space since it's trained with [smooth diffusion](https://shi-labs.github.io/Smooth-Diffusion/)
+2.  video model has been trained on unconditional sequences of videos (i.e it'll produce ten videos at a time where each video is completely unrelated to the prior video)
+
+then you can do this to fit a conditional video model:
+1. Generate a set of videos unconditionally
+2. non isotropically interpolate between various combinations of their latent spaces
+3. pick generated values that align most with the "what's the next logical thing in the sequence of videos for task x?"
+4. repeat this n times
+5. retrain your model
+
+for example, if you wanted dust3r:
+1. record some videos showing known camera motions using a robot
+2. interpolate between these videos
+3. pick interpolations that linearly transition the camera between different camera motions
+4. train sequence model that predicts videos that linearly interpolates between different camera motions
+
+You don't have a grammar of videos over the latent space technically. So you can't say: use the motion from this video with the background from this other video with the objects from this video. This limits you technically. Although, if you have a smooth latent, you can do an isotropic interpolation between the videos to hopefully get the right values.
 
 # Pitch
 
-I think there's a case here for a unified platform that iterates on the fundamentally virtuous cycle between better video generation models leading to better spatial intelligence and vice versa. So every time someone builds something, it improves the base video model for everyone, which improves everyone else's models. 
+I think there's a case here for a unified platform that iterates on the fundamentally virtuous cycle between better video generation models leading to better spatial intelligence and vice versa. So every time someone builds something, it improves the base video model for everyone, which improves everyone else's models. Unlike with text, we have access to an oracle (the real world) that allows us to endlessly learn.
